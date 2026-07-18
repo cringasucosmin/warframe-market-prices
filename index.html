@@ -165,10 +165,10 @@ function partsHtml(r) {
   if (r.parts_sum == null) return `<span class="price na">-</span>`;
   let pill = "";
   if (r.price != null) {
-    const diff = r.parts_sum - r.price;
-    if (diff > 0) pill = `<span class="pill good" title="setul intreg e mai ieftin cu ${diff}p">set &minus;${diff}</span>`;
-    else if (diff < 0) pill = `<span class="pill warn" title="pe bucati e mai ieftin cu ${-diff}p">bucati &minus;${-diff}</span>`;
-    else pill = `<span class="pill neutral">egal</span>`;
+    const diff = r.parts_sum - r.price;  // fata de pretul setului
+    if (diff > 0) pill = `<span class="pill neutral" title="pe bucati e cu ${diff}p mai scump decat setul - ia setul">+${diff}</span>`;
+    else if (diff < 0) pill = `<span class="pill good" title="pe bucati e cu ${-diff}p mai ieftin decat setul - merita luat pe piese">&minus;${-diff}</span>`;
+    else pill = `<span class="pill neutral" title="acelasi pret intreg sau pe bucati">=</span>`;
   }
   return `<span class="parts">${r.parts_sum} ${pill}</span>`;
 }
