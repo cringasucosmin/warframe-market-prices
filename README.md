@@ -1,10 +1,10 @@
-# Warframe Market — Preturi seturi Prime
+# Warframe Market — Prime Set Prices
 
-Tool local care arata preturile tuturor seturilor Prime de pe [warframe.market](https://warframe.market), cu comparatie set intreg vs. piese separate si valoarea in ducati pentru Baro.
+Local tool that shows live prices for every Prime set on [warframe.market](https://warframe.market), with a full-set vs. buy-the-parts comparison and ducat values for Baro.
 
-Zero dependinte externe — doar Python 3 (stdlib).
+Zero external dependencies — just Python 3 (stdlib only).
 
-## Rulare
+## Run it
 
 **Mac / Linux:**
 ```
@@ -16,27 +16,28 @@ python3 app.py
 py app.py
 ```
 
-Apoi deschide **http://localhost:8777** in browser.
+Then open **http://localhost:8777** in your browser.
 
-## Ce face
+## Features
 
-- **Lista seturilor Prime** (~160) cu pretul curent = cel mai mic seller aflat **in joc** (fallback: online, marcat cu flag)
-- **Pe bucati** — suma componentelor cu cantitati corecte (ex. Fang Prime = 2x blade + 2x handle + 1x blueprint), cu badge care-ti spune direct ce merita: `set −4` (setul e mai ieftin) sau `bucati −3` (piesele separate ies mai ieftin)
-- **Ducati** — valoarea totala in ducati a setului + raportul ducati/platina (util cand vine Baro)
-- **Dropdown pe fiecare set** — preturile fiecarei componente, cu cantitati si ducati
-- **Coloana Status: Vaulted / Unvaulted** — tag violet/verde pe fiecare set + filtre dedicate, combinabile cu tipul (sursa: warframestat.us, actualizata zilnic; la vaulted supply-ul scade si pretul urca in timp, la unvaulted preturile-s la minim)
-- **Cauta, filtre pe tip** (Warframe / Primary / Secondary / Melee...), sortare pe orice coloana
-- **Checkbox "am"** — bifezi ce ai deja, cu optiune sa le ascunzi (se salveaza in browser, per calculator)
+- **All Prime sets** (~160) with the current price = lowest seller who is **ingame** (fallback: online, flagged)
+- **By parts** — sum of the components with correct quantities (e.g. Fang Prime = 2x blade + 2x handle + 1x blueprint), with a badge showing the signed difference vs. the set: `+2` (parts cost more, buy the set) or `−4` in green (parts are cheaper, worth buying individually)
+- **Ducats** — total ducat value of each set + ducats-per-platinum ratio (handy when Baro arrives)
+- **Vaulted / Unvaulted status** — colored tag per set + dedicated filters, combinable with type filters (source: warframestat.us, refreshed daily; vaulted supply only shrinks over time, unvaulted prices are at their lowest)
+- **Per-set dropdown** — every component with its own price, quantity and ducats
+- **Search, type filters** (Warframe / Primary / Secondary / Melee...), sortable columns
+- **"Own it" checkboxes** — mark what you already have; owned sets are hidden by default and all counters update accordingly (stored in the browser, per machine)
+- **English / Romanian UI** — toggle button in the header, choice is remembered
 
 ## Refresh
 
-Butonul Refresh scaneaza in 3 faze: preturile seturilor → structura seturilor (doar prima data, apoi e cache) → preturile componentelor.
+The Refresh button scans in 3 phases: set prices → set structure (first run only, then cached) → component prices.
 
-- Prima scanare completa: **~5 minute** (API-ul are rate limit ~3 cereri/sec)
-- Urmatoarele: mai rapide, sar peste faza de structura
-- Datele raman afisate in timpul scanarii si se actualizeaza pe parcurs
+- First full scan: **~5 minutes** (the API allows ~3 requests/sec)
+- Subsequent scans are faster (structure phase is skipped)
+- Existing data stays visible while scanning and updates as it goes
 
-## Note
+## Notes
 
-- Folderul `data/` e cache local (se regenereaza singur) — nu e in git
-- Preturile vin din API-ul public warframe.market v2, doar pentru uz personal
+- The `data/` folder is a local cache (rebuilds itself) — not tracked in git
+- Prices come from the public warframe.market v2 API; vaulted status from the public warframestat.us API. Be nice to both — the built-in rate limiting stays within their guidelines
