@@ -42,7 +42,11 @@
   .langbtn { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: .12s; }
   .langbtn:hover { border-color: var(--accent); color: var(--accent); }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips { display: flex; flex-direction: column; gap: 9px; }
+  .chiprow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .grplbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 500; min-width: 48px; }
+  .grplbl.ml { margin-left: 22px; min-width: 0; }
+  .grp { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--muted); font-size: 13px; cursor: pointer; transition: .12s; }
   .chip:hover { border-color: var(--accent); color: var(--text); }
   .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 600; }
@@ -154,6 +158,7 @@ const LANGS = {
     th: { owned: "Am", name: "Set", price: "Pret", parts_sum: "Pe bucati", ducats: "Ducati",
           vaulted: "Status", type: "Tip", sellers: "Selleri", updated: "Actualizat" },
     now: "acum", d: "z",
+    gType: "Tip", gStatus: "Status", gPrice: "Pret",
     loading: "Se incarca componentele...",
     comp: "Componenta", compDuc: "Ducati", compPrice: "Pret acum",
     noSeller: "Nu toate componentele au seller acum", sumComp: "Suma componente",
@@ -175,6 +180,7 @@ const LANGS = {
     th: { owned: "Own", name: "Set", price: "Price", parts_sum: "By parts", ducats: "Ducats",
           vaulted: "Status", type: "Type", sellers: "Sellers", updated: "Updated" },
     now: "now", d: "d",
+    gType: "Type", gStatus: "Status", gPrice: "Price",
     loading: "Loading components...",
     comp: "Component", compDuc: "Ducats", compPrice: "Price now",
     noSeller: "Not all parts have sellers right now", sumComp: "Parts total",
@@ -242,19 +248,24 @@ function renderChips() {
   const types = order.filter(t => counts[t]);
   const nv = base.filter(r => r.vaulted === true).length;
   const nu = base.filter(r => r.vaulted === false).length;
-  const el = $("#chips");
-  el.innerHTML =
+  const typeChips =
     `<div class="chip ${typeFilter===''&&vaultFilter===''&&priceFilter===''?'active':''}" data-t="">${T.all} <b>${base.length}</b></div>` +
-    types.map(t => `<div class="chip ${typeFilter===t?'active':''}" data-t="${t}">${t==="Altele"?T.other:t} <b>${counts[t]}</b></div>`).join("") +
-    (nv + nu ? `<div class="chipsep"></div>` +
-      `<div class="chip vault ${vaultFilter==='v'?'active':''}" data-v="v">Vaulted <b>${nv}</b></div>` +
-      `<div class="chip vault ${vaultFilter==='u'?'active':''}" data-v="u">Unvaulted <b>${nu}</b></div>` : "") +
-    `<div class="chipsep"></div>` +
-    PRICE_RANGES.map(([lo, hi], i) => {
-      const n = base.filter(r => r.price != null && r.price >= lo && (hi == null || r.price < hi)).length;
-      const label = hi == null ? `${lo}+` : lo === 0 ? `&lt;${hi}` : `${lo}&ndash;${hi}`;
-      return `<div class="chip pr ${priceFilter===String(i)?'active':''}" data-p="${i}">${label} <b>${n}</b></div>`;
-    }).join("");
+    types.map(t => `<div class="chip ${typeFilter===t?'active':''}" data-t="${t}">${t==="Altele"?T.other:t} <b>${counts[t]}</b></div>`).join("");
+  const vaultChips = nv + nu
+    ? `<div class="chip vault ${vaultFilter==='v'?'active':''}" data-v="v">Vaulted <b>${nv}</b></div>` +
+      `<div class="chip vault ${vaultFilter==='u'?'active':''}" data-v="u">Unvaulted <b>${nu}</b></div>`
+    : "";
+  const priceChips = PRICE_RANGES.map(([lo, hi], i) => {
+    const n = base.filter(r => r.price != null && r.price >= lo && (hi == null || r.price < hi)).length;
+    const label = hi == null ? `${lo}+` : lo === 0 ? `&lt;${hi}` : `${lo}&ndash;${hi}`;
+    return `<div class="chip pr ${priceFilter===String(i)?'active':''}" data-p="${i}">${label} <b>${n}</b></div>`;
+  }).join("");
+  $("#chips").innerHTML =
+    `<div class="chiprow"><span class="grplbl">${T.gType}</span><div class="grp">${typeChips}</div></div>` +
+    `<div class="chiprow">` +
+      (vaultChips ? `<span class="grplbl">${T.gStatus}</span><div class="grp">${vaultChips}</div>` : "") +
+      `<span class="grplbl ${vaultChips?'ml':''}">${T.gPrice}</span><div class="grp">${priceChips}</div>` +
+    `</div>`;
 }
 
 function render() {
