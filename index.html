@@ -184,14 +184,16 @@ function ducatsHtml(r) {
 }
 
 function renderChips() {
-  const counts = {}; DATA.forEach(r => counts[r.type] = (counts[r.type]||0)+1);
+  // numerele reflecta ce se vede: cu "ascunde ce am" bifat, detinutele nu se numara
+  const base = $("#hideOwned").checked ? DATA.filter(r => !owned[r.slug]) : DATA;
+  const counts = {}; base.forEach(r => counts[r.type] = (counts[r.type]||0)+1);
   const order = ["Warframe","Primary","Secondary","Melee","Companion","Archwing","Archgun","Altele"];
   const types = order.filter(t => counts[t]);
-  const nv = DATA.filter(r => r.vaulted === true).length;
-  const nu = DATA.filter(r => r.vaulted === false).length;
+  const nv = base.filter(r => r.vaulted === true).length;
+  const nu = base.filter(r => r.vaulted === false).length;
   const el = $("#chips");
   el.innerHTML =
-    `<div class="chip ${typeFilter===''&&vaultFilter===''?'active':''}" data-t="">Toate <b>${DATA.length}</b></div>` +
+    `<div class="chip ${typeFilter===''&&vaultFilter===''?'active':''}" data-t="">Toate <b>${base.length}</b></div>` +
     types.map(t => `<div class="chip ${typeFilter===t?'active':''}" data-t="${t}">${t} <b>${counts[t]}</b></div>`).join("") +
     (nv + nu ? `<div class="chipsep"></div>` +
       `<div class="chip vault ${vaultFilter==='v'?'active':''}" data-v="v">Vaulted <b>${nv}</b></div>` +
@@ -309,6 +311,7 @@ document.addEventListener("change", e => {
     if (e.target.checked) owned[s] = 1; else delete owned[s];
     saveOwned();
     e.target.closest("tr").classList.toggle("owned", !!owned[s]);
+    renderChips();
   }
 });
 document.querySelectorAll("th[data-k]").forEach(th => {
@@ -320,7 +323,8 @@ document.querySelectorAll("th[data-k]").forEach(th => {
     render();
   };
 });
-["q","hideOwned"].forEach(id => $("#"+id).addEventListener("input", render));
+$("#q").addEventListener("input", render);
+$("#hideOwned").addEventListener("input", () => { renderChips(); render(); });
 
 async function loadData() {
   const j = await (await fetch("/api/data")).json();
