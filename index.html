@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warframe Market · Seturi Prime</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0e14;
+    --panel: #111721;
+    --panel2: #0d131c;
+    --line: #1c2430;
+    --line2: #263041;
+    --text: #e6edf3;
+    --muted: #7d8896;
+    --accent: #4dd0e1;      /* platina */
+    --accent-dim: #1f3b40;
+    --green: #3fb950;
+    --amber: #d9a441;
+    --gold: #e3b341;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+
+  header { padding: 20px 26px 16px; background: linear-gradient(180deg, #0d131c, #0a0e14); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 650; letter-spacing: .2px; }
+  .brand small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .spacer { flex: 1; }
+
+  .search { position: relative; flex: 1; max-width: 340px; }
+  .search input { width: 100%; padding: 9px 12px 9px 34px; border-radius: 9px; border: 1px solid var(--line2); background: var(--panel2); color: var(--text); font: inherit; }
+  .search input:focus { outline: none; border-color: var(--accent); }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: .5; }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 9px; border: 1px solid var(--accent); background: var(--accent); color: #04222a; font: inherit; font-weight: 600; cursor: pointer; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: default; filter: none; }
+  .toggle { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; cursor: pointer; user-select: none; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--muted); font-size: 13px; cursor: pointer; transition: .12s; }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .chip b { color: inherit; opacity: .7; font-weight: 500; margin-left: 4px; }
+
+  .barwrap { display: flex; align-items: center; gap: 10px; }
+  .bar { height: 6px; background: #1a2130; border-radius: 3px; overflow: hidden; width: 150px; display: none; }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  #prog { color: var(--muted); font-size: 12px; }
+
+  main { padding: 0 26px 80px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; }
+  thead th { position: sticky; top: 0; z-index: 3; background: #0c121a; color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line2); cursor: pointer; user-select: none; white-space: nowrap; }
+  thead th.sorted { color: var(--accent); }
+  thead th.sorted::after { content: attr(data-dir); margin-left: 5px; }
+  th.r, td.r { text-align: right; }
+  th.c, td.c { text-align: center; }
+
+  tbody tr.set td { padding: 9px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tbody tr.set { cursor: pointer; }
+  tbody tr.set:hover td { background: #0f1620; }
+  tbody tr.owned td { opacity: .38; }
+  tbody tr.owned:hover td { opacity: .6; }
+
+  .setname { display: flex; align-items: center; gap: 12px; }
+  .thumb { width: 38px; height: 38px; border-radius: 8px; background: #0c121a center/70% no-repeat; border: 1px solid var(--line2); flex: none; }
+  .setname .nm { font-weight: 550; }
+  .setname a { color: var(--text); text-decoration: none; }
+  .setname a:hover { color: var(--accent); }
+  .arrow { color: var(--muted); font-size: 11px; width: 12px; display: inline-block; transition: transform .15s; }
+  tr.open .arrow { transform: rotate(90deg); color: var(--accent); }
+
+  .typ { display: inline-block; padding: 2px 10px; border-radius: 20px; background: #17202c; border: 1px solid var(--line2); color: var(--muted); font-size: 12px; }
+  .price { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; font-variant-numeric: tabular-nums; font-weight: 650; font-size: 15px; color: var(--accent); }
+  .price.na { color: var(--muted); font-weight: 400; font-size: 14px; }
+  img.plat { height: 15px; width: auto; vertical-align: -2px; }
+  .parts { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; color: var(--text); font-weight: 550; }
+  .pill { padding: 1px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .pill.good { background: #12271a; color: var(--green); border: 1px solid #1e4028; }
+  .pill.warn { background: #2b2214; color: var(--amber); border: 1px solid #4a3a1c; }
+  .pill.neutral { background: #17202c; color: var(--muted); border: 1px solid var(--line2); }
+  .duc { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 550; }
+  .duc .dpp { color: var(--muted); font-weight: 400; font-size: 11px; }
+  .price .onlineflag { color: var(--amber); font-size: 11px; font-weight: 500; }
+  .sel { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .upd { color: var(--muted); font-size: 12px; }
+  .ck { width: 17px; height: 17px; accent-color: var(--green); cursor: pointer; }
+
+  tr.detail td { background: var(--panel2); padding: 0; border-bottom: 1px solid var(--line2); }
+  .detbox { padding: 12px 20px 16px 64px; }
+  .comp { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 24px; max-width: 560px; }
+  .comp .h { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 2px; }
+  .comp a { color: var(--text); text-decoration: none; } .comp a:hover { color: var(--accent); }
+  .comp .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 550; }
+  .comp .num.na { color: var(--muted); font-weight: 400; }
+  .cmp { margin-top: 12px; font-size: 13px; padding: 8px 12px; border-radius: 8px; background: #0c121a; display: inline-block; }
+  .cmp.good { color: var(--green); } .cmp.warn { color: var(--amber); } .cmp.neutral { color: var(--muted); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <radialGradient id="ducCoin" cx=".35" cy=".3" r=".9">
+    <stop offset="0" stop-color="#ffe9a8"/><stop offset=".55" stop-color="#e3b341"/><stop offset="1" stop-color="#8a6620"/>
+  </radialGradient>
+</defs></svg>
+<header>
+  <div class="top">
+    <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2 22 12 12 22 2 12Z" fill="#4dd0e1"/></svg> Seturi Prime <small id="count"></small></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <input id="q" placeholder="Cauta set...">
+    </div>
+    <label class="toggle"><input type="checkbox" id="hideOwned" class="ck"> ascunde ce am</label>
+    <div class="spacer"></div>
+    <div class="barwrap"><span id="prog"></span><div class="bar"><i></i></div></div>
+    <button class="btn" id="refresh"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg> Refresh</button>
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+<main>
+  <table id="tbl">
+    <thead><tr>
+      <th class="c" data-k="owned" style="width:44px">Am</th>
+      <th data-k="name">Set</th>
+      <th class="r" data-k="parts_sum" style="width:185px">Pe bucati</th>
+      <th class="r" data-k="ducats" style="width:120px">Ducati</th>
+      <th data-k="type" style="width:120px">Tip</th>
+      <th class="r" data-k="price" style="width:120px">Pret</th>
+      <th class="r" data-k="sellers" style="width:90px">Selleri</th>
+      <th class="r" data-k="updated" style="width:100px">Actualizat</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+</main>
+<script>
+const PLAT = '<img class="plat" src="data:image/png;base64,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" alt="platina" title="platina">';
+const DUCAT = '<svg width="13" height="13" viewBox="0 0 24 24" style="vertical-align:-2px"><circle cx="12" cy="12" r="10" fill="url(#ducCoin)" stroke="#6b4e15" stroke-width="1.2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#8a6620" stroke-width="1.4"/></svg>';
+let DATA = [];
+let sortK = "price", sortDir = 1, typeFilter = "";
+const owned = JSON.parse(localStorage.getItem("wfm_owned") || "{}");
+const compCache = {};
+const $ = s => document.querySelector(s);
+
+function saveOwned() { localStorage.setItem("wfm_owned", JSON.stringify(owned)); }
+function ago(ts) {
+  if (!ts) return "-";
+  const s = Date.now()/1000 - ts;
+  if (s < 90) return "acum"; if (s < 3600) return Math.round(s/60)+"m";
+  if (s < 86400) return Math.round(s/3600)+"h"; return Math.round(s/86400)+"z";
+}
+function priceHtml(r) {
+  if (r.price == null) return `<span class="price na">-</span>`;
+  const flag = r.kind === "online" ? ` <span class="onlineflag" title="nimeni in joc acum">online</span>` : "";
+  return `<span class="price">${PLAT} ${r.price}${flag}</span>`;
+}
+function partsHtml(r) {
+  if (r.parts_sum == null) return `<span class="price na">-</span>`;
+  let pill = "";
+  if (r.price != null) {
+    const diff = r.parts_sum - r.price;
+    if (diff > 0) pill = `<span class="pill good" title="setul intreg e mai ieftin cu ${diff}p">set &minus;${diff}</span>`;
+    else if (diff < 0) pill = `<span class="pill warn" title="pe bucati e mai ieftin cu ${-diff}p">bucati &minus;${-diff}</span>`;
+    else pill = `<span class="pill neutral">egal</span>`;
+  }
+  return `<span class="parts">${PLAT} ${r.parts_sum} ${pill}</span>`;
+}
+function ducatsHtml(r) {
+  if (!r.ducats) return `<span class="price na">-</span>`;
+  const dpp = r.price ? ` <span class="dpp" title="ducati per platina">${(r.ducats / r.price).toFixed(1)}/p</span>` : "";
+  return `<span class="duc">${DUCAT} ${r.ducats}${dpp}</span>`;
+}
+
+function renderChips() {
+  const counts = {}; DATA.forEach(r => counts[r.type] = (counts[r.type]||0)+1);
+  const order = ["Warframe","Primary","Secondary","Melee","Companion","Archwing","Archgun","Altele"];
+  const types = order.filter(t => counts[t]);
+  const el = $("#chips");
+  el.innerHTML =
+    `<div class="chip ${typeFilter===''?'active':''}" data-t="">Toate <b>${DATA.length}</b></div>` +
+    types.map(t => `<div class="chip ${typeFilter===t?'active':''}" data-t="${t}">${t} <b>${counts[t]}</b></div>`).join("");
+}
+
+function render() {
+  const q = $("#q").value.toLowerCase().trim();
+  const hideOwned = $("#hideOwned").checked;
+  let rows = DATA.filter(r => {
+    if (typeFilter && r.type !== typeFilter) return false;
+    if (q && !r.name.toLowerCase().includes(q)) return false;
+    if (hideOwned && owned[r.slug]) return false;
+    return true;
+  });
+  rows.sort((a, b) => {
+    let x, y;
+    if (sortK === "owned") { x = owned[a.slug]?1:0; y = owned[b.slug]?1:0; }
+    else if (["price","sellers","updated","parts_sum","ducats"].includes(sortK)) {
+      x = a[sortK]; y = b[sortK];
+      if (x == null) x = sortDir === 1 ? Infinity : -Infinity;
+      if (y == null) y = sortDir === 1 ? Infinity : -Infinity;
+    } else { x = (a[sortK]||"").toString().toLowerCase(); y = (b[sortK]||"").toString().toLowerCase(); }
+    return x < y ? -sortDir : x > y ? sortDir : 0;
+  });
+
+  const tb = $("#tbl tbody");
+  tb.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.className = "set" + (owned[r.slug] ? " owned" : "");
+    tr.dataset.slug = r.slug;
+    const th = r.thumb ? `background-image:url('${r.thumb}')` : "";
+    tr.innerHTML =
+      `<td class="c"><input type="checkbox" class="ck" ${owned[r.slug]?"checked":""} data-s="${r.slug}"></td>` +
+      `<td><div class="setname"><span class="arrow">&#9656;</span><span class="thumb" style="${th}"></span>` +
+        `<span class="nm"><a href="https://warframe.market/items/${r.slug}" target="_blank">${r.name.replace(/ Set$/,'')}</a></span></div></td>` +
+      `<td class="r">${partsHtml(r)}</td>` +
+      `<td class="r">${ducatsHtml(r)}</td>` +
+      `<td><span class="typ">${r.type}</span></td>` +
+      `<td class="r">${priceHtml(r)}</td>` +
+      `<td class="r sel">${r.sellers ?? 0}</td>` +
+      `<td class="r upd">${ago(r.updated)}</td>`;
+    frag.appendChild(tr);
+  }
+  tb.appendChild(frag);
+  $("#count").textContent = `· ${rows.length} din ${DATA.length}`;
+}
+
+async function toggleRow(tr) {
+  const slug = tr.dataset.slug;
+  if (tr.classList.contains("open")) {
+    tr.classList.remove("open");
+    if (tr.nextSibling && tr.nextSibling.classList?.contains("detail")) tr.nextSibling.remove();
+    return;
+  }
+  tr.classList.add("open");
+  const det = document.createElement("tr");
+  det.className = "detail";
+  det.innerHTML = `<td colspan="8"><div class="detbox" style="color:var(--muted)">Se incarca componentele...</div></td>`;
+  tr.after(det);
+
+  let d = compCache[slug];
+  if (!d) { d = await (await fetch("/api/components?slug=" + slug)).json(); compCache[slug] = d; }
+
+  const setR = DATA.find(x => x.slug === slug);
+  const setPrice = setR ? setR.price : null;
+  if (setR && d.sum_price != null) {  // actualizeaza si celula "Pe bucati" din rand
+    setR.parts_sum = d.sum_price;
+    if (tr.children[2]) tr.children[2].innerHTML = partsHtml(setR);
+  }
+  let html = `<div class="comp"><div class="h">Componenta</div><div class="h" style="text-align:right">Ducati</div><div class="h" style="text-align:right">Pret acum</div>`;
+  for (const c of d.components) {
+    const qty = c.qty || 1;
+    const nm = (qty > 1 ? `<b style="color:var(--accent)">${qty}&times;</b> ` : "") + c.name;
+    const duc = c.ducats ? `<div class="num" style="color:var(--gold);font-weight:400">${qty>1?qty+'&times;':''}${c.ducats}</div>` : `<div class="num na">-</div>`;
+    const online = c.kind === 'online' ? ' <span style="color:var(--amber);font-size:11px">online</span>' : '';
+    const p = c.price != null
+      ? `<div class="num">${qty>1?`${qty}&times;${c.price} = `:''}${PLAT} ${qty*c.price}${online}</div>`
+      : `<div class="num na">-</div>`;
+    html += `<div><a href="https://warframe.market/items/${c.slug}" target="_blank">${nm}</a></div>${duc}${p}`;
+  }
+  html += `</div>`;
+  if (d.sum_price != null && setPrice != null) {
+    const diff = setPrice - d.sum_price;
+    if (diff > 0) html += `<div class="cmp good">Pe bucati ${PLAT} <b>${d.sum_price}</b> vs set ${setPrice} &rarr; economisesti ${PLAT} <b>${diff}</b></div>`;
+    else if (diff < 0) html += `<div class="cmp warn">Setul intreg (${PLAT} ${setPrice}) e mai ieftin cu <b>${-diff}</b> decat pe bucati (${d.sum_price})</div>`;
+    else html += `<div class="cmp neutral">Acelasi pret intreg sau pe bucati (${PLAT} ${setPrice})</div>`;
+  } else if (d.sum_price != null) {
+    html += `<div class="cmp neutral">Suma componente: ${PLAT} <b>${d.sum_price}</b></div>`;
+  } else {
+    html += `<div class="cmp neutral">Nu toate componentele au seller acum</div>`;
+  }
+  det.querySelector(".detbox").innerHTML = html;
+}
+
+document.addEventListener("click", e => {
+  const chip = e.target.closest(".chip");
+  if (chip) { typeFilter = chip.dataset.t; renderChips(); render(); return; }
+  if (e.target.matches("input[data-s]") || e.target.closest("a")) return;
+  const tr = e.target.closest("tr.set");
+  if (tr) toggleRow(tr);
+});
+document.addEventListener("change", e => {
+  if (e.target.matches("input[data-s]")) {
+    const s = e.target.dataset.s;
+    if (e.target.checked) owned[s] = 1; else delete owned[s];
+    saveOwned();
+    e.target.closest("tr").classList.toggle("owned", !!owned[s]);
+  }
+});
+document.querySelectorAll("th[data-k]").forEach(th => {
+  th.onclick = () => {
+    const k = th.dataset.k;
+    if (sortK === k) sortDir *= -1; else { sortK = k; sortDir = 1; }
+    document.querySelectorAll("th").forEach(x => { x.classList.remove("sorted"); x.removeAttribute("data-dir"); });
+    th.classList.add("sorted"); th.dataset.dir = sortDir === 1 ? "▴" : "▾";
+    render();
+  };
+});
+["q","hideOwned"].forEach(id => $("#"+id).addEventListener("input", render));
+
+async function loadData() {
+  const j = await (await fetch("/api/data")).json();
+  DATA = j.sets;
+  renderChips(); render();
+}
+async function poll() {
+  const s = await (await fetch("/api/status")).json();
+  const bar = $(".bar"), prog = $("#prog");
+  if (s.running) {
+    bar.style.display = "block";
+    const pct = s.total ? Math.round(s.done/s.total*100) : 0;
+    bar.querySelector("i").style.width = pct + "%";
+    prog.textContent = `${s.phase || ""} ${s.done}/${s.total}`;
+    $("#refresh").disabled = true;
+    setTimeout(poll, 1000);
+  } else {
+    if (bar.style.display === "block") { Object.keys(compCache).forEach(k => delete compCache[k]); await loadData(); }
+    bar.style.display = "none";
+    prog.textContent = s.error ? "eroare: " + s.error : "";
+    $("#refresh").disabled = false;
+  }
+}
+$("#refresh").onclick = async () => { await fetch("/api/refresh", { method: "POST" }); poll(); };
+
+loadData(); poll();
+</script>
+</body>
+</html>
