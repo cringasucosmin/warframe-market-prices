@@ -44,8 +44,11 @@
 
   .chips { display: flex; flex-direction: column; gap: 9px; }
   .chiprow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .grplbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 500; min-width: 48px; }
-  .grplbl.ml { margin-left: 22px; min-width: 0; }
+  .grplbl { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 650; padding: 4px 11px; border-radius: 7px; min-width: 62px; text-align: center; }
+  .grplbl.t { background: var(--accent-dim); color: var(--accent); border: 1px solid #2a5a63; }
+  .grplbl.s { background: #241b3d; color: var(--violet); border: 1px solid #3d3260; }
+  .grplbl.p { background: #2b2214; color: var(--gold); border: 1px solid #4a3a1c; }
+  .grplbl.ml { margin-left: 22px; }
   .grp { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--muted); font-size: 13px; cursor: pointer; transition: .12s; }
   .chip:hover { border-color: var(--accent); color: var(--text); }
@@ -261,10 +264,10 @@ function renderChips() {
     return `<div class="chip pr ${priceFilter===String(i)?'active':''}" data-p="${i}">${label} <b>${n}</b></div>`;
   }).join("");
   $("#chips").innerHTML =
-    `<div class="chiprow"><span class="grplbl">${T.gType}</span><div class="grp">${typeChips}</div></div>` +
+    `<div class="chiprow"><span class="grplbl t">${T.gType}</span><div class="grp">${typeChips}</div></div>` +
     `<div class="chiprow">` +
-      (vaultChips ? `<span class="grplbl">${T.gStatus}</span><div class="grp">${vaultChips}</div>` : "") +
-      `<span class="grplbl ${vaultChips?'ml':''}">${T.gPrice}</span><div class="grp">${priceChips}</div>` +
+      (vaultChips ? `<span class="grplbl s">${T.gStatus}</span><div class="grp">${vaultChips}</div>` : "") +
+      `<span class="grplbl p ${vaultChips?'ml':''}">${T.gPrice}</span><div class="grp">${priceChips}</div>` +
     `</div>`;
 }
 
