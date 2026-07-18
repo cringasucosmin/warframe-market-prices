@@ -22,6 +22,7 @@ DATA_DIR = os.path.join(BASE, "data")
 ITEMS_FILE = os.path.join(DATA_DIR, "items.json")     # metadata toate item-urile (id/slug/name/tags)
 SETS_FILE = os.path.join(DATA_DIR, "sets.json")       # slug set -> componente (cache static)
 PRICES_FILE = os.path.join(DATA_DIR, "prices.json")   # slug -> pret
+VAULTED_FILE = os.path.join(DATA_DIR, "vaulted.json") # nume item -> vaulted (sursa: warframestat.us)
 PORT = 8777
 
 API = "https://api.warframe.market/v2"
@@ -166,6 +167,28 @@ def get_components(set_slug):
     return comps
 
 
+WS_API = "https://api.warframestat.us/items?only=name,category,vaulted"
+WS_CATS = {"Warframes", "Primary", "Secondary", "Melee", "Sentinels", "Pets", "Arch-Gun", "Archwing"}
+
+
+def refresh_vaulted(max_age=86400):
+    """Status vaulted/unvaulted per item Prime, dintr-un singur call bulk la
+    warframestat.us (dataset WFCD; warframe.market nu are asta pe seturi).
+    Cache in vaulted.json, reimprospatat daca e mai vechi de o zi.
+    """
+    v = load_json(VAULTED_FILE, None)
+    if v and time.time() - v.get("updated", 0) < max_age:
+        return v["map"]
+    d = http_get(WS_API, tries=2)
+    if not isinstance(d, list):
+        return (v or {}).get("map", {})
+    vm = {it["name"].lower(): bool(it.get("vaulted"))
+          for it in d
+          if it.get("category") in WS_CATS and "vaulted" in it and it.get("name")}
+    save_json(VAULTED_FILE, {"updated": int(time.time()), "map": vm})
+    return vm
+
+
 def set_extras(comps, prices):
     """Ducati totali + suma pe bucati (cu cantitati) din cache-ul de preturi."""
     if not comps or not all("qty" in c for c in comps):
@@ -183,6 +206,7 @@ def scan_worker():
     with LOCK:
         STATE.update(running=True, done=0, total=len(targets), phase="seturi",
                      started=time.time(), error="")
+    refresh_vaulted()  # un singur call bulk, doar daca cache-ul e mai vechi de o zi
     for i, it in enumerate(targets, 1):
         r = fetch_top(it["slug"])
         if r is not None:
@@ -253,13 +277,16 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/data":
             prices = load_json(PRICES_FILE, {})
             sets_cache = load_json(SETS_FILE, {})
+            vaulted_map = load_json(VAULTED_FILE, {}).get("map", {})
             rows = []
             for it in prime_sets():
                 p = prices.get(it["slug"], {})
                 ducats, parts_sum = set_extras(sets_cache.get(it["slug"]), prices)
+                base = it["name"].lower().removesuffix(" set")
                 rows.append({"slug": it["slug"], "name": it["name"],
                              "type": set_type(it["tags"]), "thumb": it.get("thumb"),
-                             "ducats": ducats, "parts_sum": parts_sum, **p})
+                             "ducats": ducats, "parts_sum": parts_sum,
+                             "vaulted": vaulted_map.get(base), **p})
             self._send(200, json.dumps({"sets": rows}))
 
         elif path == "/api/components":
@@ -308,4 +335,5 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     print(f"Warframe Market - Preturi seturi Prime -> http://localhost:{PORT}")
     print("Ctrl+C ca sa opresti.")
+    threading.Thread(target=refresh_vaulted, daemon=True).start()
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

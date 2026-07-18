@@ -24,6 +24,7 @@ Apoi deschide **http://localhost:8777** in browser.
 - **Pe bucati** — suma componentelor cu cantitati corecte (ex. Fang Prime = 2x blade + 2x handle + 1x blueprint), cu badge care-ti spune direct ce merita: `set −4` (setul e mai ieftin) sau `bucati −3` (piesele separate ies mai ieftin)
 - **Ducati** — valoarea totala in ducati a setului + raportul ducati/platina (util cand vine Baro)
 - **Dropdown pe fiecare set** — preturile fiecarei componente, cu cantitati si ducati
+- **Vaulted / Unvaulted** — badge violet "V" pe seturile vaulted + filtre dedicate, combinabile cu tipul (sursa: warframestat.us, actualizata zilnic; la vaulted supply-ul scade si pretul urca in timp, la unvaulted preturile-s la minim)
 - **Cauta, filtre pe tip** (Warframe / Primary / Secondary / Melee...), sortare pe orice coloana
 - **Checkbox "am"** — bifezi ce ai deja, cu optiune sa le ascunzi (se salveaza in browser, per calculator)
 
