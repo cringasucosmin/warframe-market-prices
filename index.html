@@ -48,6 +48,7 @@
   .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 600; }
   .chip b { color: inherit; opacity: .7; font-weight: 500; margin-left: 4px; }
   .chip.vault.active { background: #241b3d; border-color: var(--violet); color: var(--violet); }
+  .chip.pr.active { background: #2b2214; border-color: var(--gold); color: var(--gold); }
   .chipsep { width: 1px; align-self: stretch; background: var(--line2); margin: 2px 4px; }
   .vlt { display: inline-block; padding: 2px 10px; border-radius: 20px; background: #241b3d; border: 1px solid #3d3260; color: var(--violet); font-size: 11px; font-weight: 600; }
   .unv { display: inline-block; padding: 2px 10px; border-radius: 20px; background: #12271a; border: 1px solid #1e4028; color: var(--green); font-size: 11px; font-weight: 600; }
@@ -193,7 +194,8 @@ const LANGS = {
 let DATA = [];
 let lang = localStorage.getItem("wfm_lang") || ((navigator.language || "").toLowerCase().startsWith("ro") ? "ro" : "en");
 let T = LANGS[lang] || LANGS.ro;
-let sortK = "price", sortDir = 1, typeFilter = "", vaultFilter = "";
+let sortK = "price", sortDir = 1, typeFilter = "", vaultFilter = "", priceFilter = "";
+const PRICE_RANGES = [[0, 25], [25, 50], [50, 100], [100, null]];  // [min, max) in platina
 const owned = JSON.parse(localStorage.getItem("wfm_owned") || "{}");
 const compCache = {};
 const $ = s => document.querySelector(s);
@@ -242,11 +244,17 @@ function renderChips() {
   const nu = base.filter(r => r.vaulted === false).length;
   const el = $("#chips");
   el.innerHTML =
-    `<div class="chip ${typeFilter===''&&vaultFilter===''?'active':''}" data-t="">${T.all} <b>${base.length}</b></div>` +
+    `<div class="chip ${typeFilter===''&&vaultFilter===''&&priceFilter===''?'active':''}" data-t="">${T.all} <b>${base.length}</b></div>` +
     types.map(t => `<div class="chip ${typeFilter===t?'active':''}" data-t="${t}">${t==="Altele"?T.other:t} <b>${counts[t]}</b></div>`).join("") +
     (nv + nu ? `<div class="chipsep"></div>` +
       `<div class="chip vault ${vaultFilter==='v'?'active':''}" data-v="v">Vaulted <b>${nv}</b></div>` +
-      `<div class="chip vault ${vaultFilter==='u'?'active':''}" data-v="u">Unvaulted <b>${nu}</b></div>` : "");
+      `<div class="chip vault ${vaultFilter==='u'?'active':''}" data-v="u">Unvaulted <b>${nu}</b></div>` : "") +
+    `<div class="chipsep"></div>` +
+    PRICE_RANGES.map(([lo, hi], i) => {
+      const n = base.filter(r => r.price != null && r.price >= lo && (hi == null || r.price < hi)).length;
+      const label = hi == null ? `${lo}+` : lo === 0 ? `&lt;${hi}` : `${lo}&ndash;${hi}`;
+      return `<div class="chip pr ${priceFilter===String(i)?'active':''}" data-p="${i}">${label} <b>${n}</b></div>`;
+    }).join("");
 }
 
 function render() {
@@ -256,6 +264,10 @@ function render() {
     if (typeFilter && r.type !== typeFilter) return false;
     if (vaultFilter === "v" && r.vaulted !== true) return false;
     if (vaultFilter === "u" && r.vaulted !== false) return false;
+    if (priceFilter !== "") {
+      const [lo, hi] = PRICE_RANGES[+priceFilter];
+      if (r.price == null || r.price < lo || (hi != null && r.price >= hi)) return false;
+    }
     if (q && !r.name.toLowerCase().includes(q)) return false;
     if (hideOwned && owned[r.slug]) return false;
     return true;
@@ -347,7 +359,8 @@ document.addEventListener("click", e => {
   const chip = e.target.closest(".chip");
   if (chip) {
     if (chip.dataset.v !== undefined) vaultFilter = vaultFilter === chip.dataset.v ? "" : chip.dataset.v;
-    else { typeFilter = chip.dataset.t; if (typeFilter === "") vaultFilter = ""; }
+    else if (chip.dataset.p !== undefined) priceFilter = priceFilter === chip.dataset.p ? "" : chip.dataset.p;
+    else { typeFilter = chip.dataset.t; if (typeFilter === "") { vaultFilter = ""; priceFilter = ""; } }
     renderChips(); render(); return;
   }
   if (e.target.matches("input[data-s]") || e.target.closest("a")) return;
